@@ -1,0 +1,28 @@
+sw5
+crash
+[468771] [DEBUG] Latest crash was at 45653906 ms after boot
+[468772] [DEBUG] Reason of restart: 2
+[468773] [DEBUG] Exception cause: 29
+[468773] [DEBUG] epc1=0x40241fd3 epc2=0x00000000 epc3=0x00000000
+[468778] [DEBUG] excvaddr=0x00000019 depc=0x00000000
+[468783] [DEBUG] sp=0x3ffffea0 end=0x3fffffb0
+[468787] [DEBUG] >>>stack>>>
+[DEBUG] 3ffffea0: 3ffefad8 a12d8110 3ffefad8 a12d8110 
+[DEBUG] 3ffffeb0: 3ffffed0 402420e3 3ffef32c 0000000a 
+[DEBUG] 3ffffec0: 4024d952 3ffeff54 3ffefad8 00000064 
+[DEBUG] 3ffffed0: 00000018 3ffefa4c 3ffea82a 3ffea82a 
+[DEBUG] 3ffffee0: 3fff4627 3ffeeeb8 3fff260c 00000008 
+[DEBUG] 3ffffef0: 40243d5b 3ffefa00 3ffefad8 a12d8110 
+[DEBUG] 3fffff00: 00000001 00000000 00000064 401004d8 
+[DEBUG] 3fffff10: 40243a10 402439e4 3ffea904 00000000 
+[DEBUG] 3fffff20: 402457b1 402439e4 525ddc6e 4023a76d 
+[DEBUG] 3fffff30: 3ffef428 40245778 3ffefa18 3ffeeed0 
+[DEBUG] 3fffff40: 402439da a12d3567 60000600 4023a9b5 
+[DEBUG] 3fffff50: 40243981 3ffefa18 3ffeeed0 a12d8110 
+[DEBUG] 3fffff60: 40243e34 525df7cc 3ffeeed0 40201750 
+[DEBUG] 3fffff70: 4022fdf5 3ffefa18 3ffeeed0 a12d627a 
+[DEBUG] 3fffff80: 4022fe3a 3fffdab0 00000000 3fffdcb0 
+[DEBUG] 3fffff90: 3ffeeef0 3fffdad0 3fff0c0c 40227947 
+[DEBUG] 3fffffa0: 40000f49 40000f49 3fffdab0 40000f49 
+[DEBUG] <<<stack<<<
+[468911] +OK

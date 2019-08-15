@@ -1,0 +1,28 @@
+sw6
+[070790] [DEBUG] Latest crash was at 93457296 ms after boot
+[070791] [DEBUG] Reason of restart: 2
+[070792] [DEBUG] Exception cause: 29
+[070792] [DEBUG] epc1=0x40241fd3 epc2=0x00000000 epc3=0x00000000
+[070797] [DEBUG] excvaddr=0x00000019 depc=0x00000000
+[070802] [DEBUG] sp=0x3ffffea0 end=0x3fffffb0
+[070805] 
+>>>stack>>>
+3ffffea0: 3ffefad8 c27b684a 3ffefad8 c27b684a 
+3ffffeb0: 3ffffed0 402420e3 3ffef32c 00000001 
+3ffffec0: 4024d952 3ffeff54 3ffefad8 00000064 
+3ffffed0: 00000018 3ffefa4c 3ffea82a 3ffea82a 
+3ffffee0: 3fff4627 3ffeeeb8 3fff260c 00000008 
+3ffffef0: 40243d5b 3ffefa00 3ffefad8 c27b684a 
+3fffff00: 00000001 4024a624 3ffef428 401004d8 
+3fffff10: 40243a10 402439e4 3ffefa18 00000000 
+3fffff20: 402457b1 402439e4 ccc6042a 4023a76d 
+3fffff30: 3ffef3bc 40245778 3ffefa18 3ffeeed0 
+3fffff40: 402439da c27aee43 60000600 4023a9b5 
+3fffff50: 40243981 3ffefa18 3ffeeed0 c27b684a 
+3fffff60: 40243e34 ccc650e2 3ffeeed0 40201750 
+3fffff70: 4022fdf5 3ffefa18 3ffeeed0 c27b4fea 
+3fffff80: 4022fe3a 3fffdab0 00000000 3fffdcb0 
+3fffff90: 3ffeeef8 3fffdad0 3fff0c0c 40227947 
+3fffffa0: 40000f49 3fffdab0 3fffdab0 40000f49 
+<<<stack<<<
+[070929] +OK

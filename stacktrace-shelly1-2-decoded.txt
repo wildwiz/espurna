@@ -1,0 +1,31 @@
+crash
+[245511] [DEBUG] Latest crash was at 24991671 ms after boot
+[245512] [DEBUG] Reason of restart: 2
+[245512] [DEBUG] Exception cause: 29
+[245512] [DEBUG] epc1=0x40241fd3 epc2=0x00000000 epc3=0x00000000
+[245517] [DEBUG] excvaddr=0x00000019 depc=0x00000000
+[245522] [DEBUG] sp=0x3ffffea0 end=0x3fffffb0
+[245526] [DEBUG] >>>stack>>>
+Exception Cause: Not found
+0x40241fd3: ieee80211_add_xrates at ??:?
+0x402420e3: ieee80211_send_probereq at ??:?
+0x4024d952: phy_after_init_enrx at ??:?
+0x40243d5b: scan_remove_probe_ssid at ??:?
+0x401004d8: malloc at .platformio/packages/framework-arduinoespressif8266@1.20300.1/cores/esp8266/umm_malloc/umm_malloc.c:1664
+0x40243a10: scan_pm_channel_op_cb at ??:?
+0x402439e4: scan_pm_channel_op_cb at ??:?
+0x401073fc: pvPortMalloc at .platformio/packages/framework-arduinoespressif8266@1.20300.1/cores/esp8266/heap.c:13
+0x402457b1: chm_start_op at ??:?
+0x402439e4: scan_pm_channel_op_cb at ??:?
+0x4023a76d: sys_timeout at espressif/arduino/tools/sdk/lwip/src/core/timers.c:296
+0x40245778: chm_start_op at ??:?
+0x402439da: scan_pm_channel_op_cb at ??:?
+0x4023a9b5: sys_check_timeouts at expressif/arduino/tools/sdk/lwip/src/core/timers.c:420
+0x40243981: scan_pm_channel_op_cb at ??:?
+0x40243e34: scan_clear_channles at ??:?
+0x40201750: delay_end at .platformio/packages/framework-arduinoespressif8266@1.20300.1/cores/esp8266/core_esp8266_wiring.c:40
+0x4022fdf5: ets_timer_handler_isr at ??:?
+0x4022fe3a: ets_timer_handler_isr at ??:?
+0x40227947: loop_task at .platformio/packages/framework-arduinoespressif8266@1.20300.1/cores/esp8266/core_esp8266_main.cpp:130
+0x40000f49: ?? ??:0
+0x40000f49: ?? ??:0

@@ -1,0 +1,17 @@
+br433
+[117906] [DEBUG] Latest crash was at 45597751 ms after boot
+[117909] [DEBUG] Reason of restart: 2
+[117910] [DEBUG] Exception cause: 29
+[117911] [DEBUG] epc1=0x4000e1b2 epc2=0x00000000 epc3=0x00000000
+[117913] [DEBUG] excvaddr=0x00000000 depc=0x00000000
+[117918] [DEBUG] >>>stack>>>
+[DEBUG] 3fffff20: 00000002 0000002c 3fff29f4 40216d94 
+[DEBUG] 3fffff30: 402467b5 00000002 3fff29f4 40106edc 
+[DEBUG] 3fffff40: 4026cc40 3fff29f4 60000600 402467d3 
+[DEBUG] 3fffff50: 40247bbd 3fff29f8 3ffef040 9dd57b48 
+[DEBUG] 3fffff60: 60000600 00000000 3ffef49c 00000000 
+[DEBUG] 3fffff70: 40231c5d 3fff29f8 3ffef040 9dd5673b 
+[DEBUG] 3fffff80: 40231ca2 3fffdab0 00000000 3fffdcb0 
+[DEBUG] 3fffff90: 3ffef050 3fffdad0 3fff0fec 402152bf 
+[DEBUG] 3fffffa0: 40000f49 40000f49 3fffdab0 40000f49 
+[DEBUG] <<<stack<<<
