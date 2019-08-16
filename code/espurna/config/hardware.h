@@ -694,7 +694,7 @@
 
     // Info
     #define MANUFACTURER        "ITEAD"
-    #define DEVICE              "SONOFF_RFBRIDGE"
+    #define DEVICE              "SONOFF_RFBRIDGE-mb"
     #define RELAY_PROVIDER      RELAY_PROVIDER_RFBRIDGE
 
     // Number of virtual switches
@@ -2633,7 +2633,7 @@
 
     // Info
     #define MANUFACTURER            "LUANI"
-    #define DEVICE                  "HVIO"
+    #define DEVICE                  "HVIO-mb"
 
     // Buttons
     #define BUTTON1_PIN             12
@@ -3117,7 +3117,7 @@
 
     // Info
     #define MANUFACTURER        "ALLTERCO"
-    #define DEVICE              "SHELLY1"
+    #define DEVICE              "SHELLY1-mb"
 
     // Buttons
     #define BUTTON1_PIN         5
@@ -3132,7 +3132,7 @@
 
     // Info
     #define MANUFACTURER        "ALLTERCO"
-    #define DEVICE              "SHELLY2"
+    #define DEVICE              "SHELLY2-mb"
 
     // Buttons
     #define BUTTON1_PIN         12
