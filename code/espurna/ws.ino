@@ -91,6 +91,22 @@ struct ws_data_t {
         counter(0, 1)
     {}
 
+    ws_data_t(uint32_t client_id, const ws_on_send_callback_f& cb) :
+        storage(new ws_on_send_callback_list_t {cb}),
+        client_id(client_id),
+        mode(ALL),
+        callbacks(*storage.get()),
+        counter(0, 1)
+    {}
+
+    ws_data_t(const uint32_t client_id, ws_on_send_callback_list_t&& callbacks, mode_t mode = SEQUENCE) :
+        storage(new ws_on_send_callback_list_t(std::move(callbacks))),
+        client_id(client_id),
+        mode(mode),
+        callbacks(*storage.get()),
+        counter(0, (storage.get())->size())
+    {}
+
     ws_data_t(const uint32_t client_id, const ws_on_send_callback_list_t& callbacks, mode_t mode = SEQUENCE) :
         client_id(client_id),
         mode(mode),
@@ -532,9 +548,6 @@ void _wsOnConnected(JsonObject& root) {
     root["btnDelay"] = getSetting("btnDelay", BUTTON_DBLCLICK_DELAY).toInt();
     root["webPort"] = getSetting("webPort", WEB_PORT).toInt();
     root["wsAuth"] = getSetting("wsAuth", WS_AUTHENTICATION).toInt() == 1;
-    #if TERMINAL_SUPPORT
-        root["cmdVisible"] = 1;
-    #endif
     root["hbMode"] = getSetting("hbMode", HEARTBEAT_MODE).toInt();
     root["hbInterval"] = getSetting("hbInterval", HEARTBEAT_INTERVAL).toInt();
 }
@@ -642,17 +655,21 @@ void _wsHandleClientData(const bool connected) {
 
     if (_ws_client_data.empty()) return;
     auto& data = _ws_client_data.front();
-    AsyncWebSocketClient* ws_client = _ws.client(data.client_id);
 
-    if (!ws_client) {
-        _ws_client_data.pop();
-        return;
-    }
+    // client_id == 0 means we need to send the message to every client
+    if (data.client_id) {
+        AsyncWebSocketClient* ws_client = _ws.client(data.client_id);
 
-    // wait until we can send the next batch of messages
-    // XXX: enforce that callbacks send only one message per iteration
-    if (ws_client->queueIsFull()) {
-        return;
+        if (!ws_client) {
+            _ws_client_data.pop();
+            return;
+        }
+
+        // wait until we can send the next batch of messages
+        // XXX: enforce that callbacks send only one message per iteration
+        if (ws_client->queueIsFull()) {
+            return;
+        }
     }
 
     // XXX: block allocation will try to create *2 next time,
@@ -748,6 +765,10 @@ void wsPost(const ws_on_send_callback_f& cb) {
     _ws_client_data.emplace(cb);
 }
 
+void wsPost(uint32_t client_id, const ws_on_send_callback_f& cb) {
+    _ws_client_data.emplace(client_id, cb);
+}
+
 void wsPostAll(uint32_t client_id, const ws_on_send_callback_list_t& cbs) {
     _ws_client_data.emplace(client_id, cbs, ws_data_t::ALL);
 }
@@ -758,6 +779,10 @@ void wsPostAll(const ws_on_send_callback_list_t& cbs) {
 
 void wsPostSequence(uint32_t client_id, const ws_on_send_callback_list_t& cbs) {
     _ws_client_data.emplace(client_id, cbs, ws_data_t::SEQUENCE);
+}
+
+void wsPostSequence(uint32_t client_id, ws_on_send_callback_list_t&& cbs) {
+    _ws_client_data.emplace(client_id, std::forward<ws_on_send_callback_list_t>(cbs), ws_data_t::SEQUENCE);
 }
 
 void wsPostSequence(const ws_on_send_callback_list_t& cbs) {

@@ -11,10 +11,26 @@ extern "C" {
 }
 
 #define UNUSED(x) (void)(x)
+#define INLINE inline __attribute__((always_inline))
 
 // -----------------------------------------------------------------------------
 // System
 // -----------------------------------------------------------------------------
+
+#define LWIP_INTERNAL
+#include <ESP8266WiFi.h>
+#undef LWIP_INTERNAL
+
+extern "C" {
+  #include <lwip/opt.h>
+  #include <lwip/ip.h>
+  #include <lwip/tcp.h>
+  #include <lwip/inet.h> // ip_addr_t
+  #include <lwip/err.h> // ERR_x
+  #include <lwip/dns.h> // dns_gethostbyname
+  #include <lwip/ip_addr.h> // ip4/ip6 helpers
+  #include <lwip/init.h> // LWIP_VERSION_MAJOR
+}
 
 uint32_t systemResetReason();
 uint8_t systemStabilityCounter();
@@ -162,15 +178,60 @@ int16_t i2c_read_int16_le(uint8_t address, uint8_t reg);
 void i2c_read_buffer(uint8_t address, uint8_t * buffer, size_t len);
 
 // -----------------------------------------------------------------------------
+// Lights
+// -----------------------------------------------------------------------------
+
+unsigned char lightChannels();
+
+void lightState(unsigned char i, bool state);
+bool lightState(unsigned char i);
+
+void lightState(bool state);
+bool lightState();
+
+void lightBrightness(unsigned int brightness);
+unsigned int lightBrightness();
+
+unsigned int lightChannel(unsigned char id);
+void lightChannel(unsigned char id, unsigned char value);
+
+// -----------------------------------------------------------------------------
 // MQTT
 // -----------------------------------------------------------------------------
 
+#if MQTT_LIBRARY == MQTT_LIBRARY_ASYNCMQTTCLIENT
+    #include <ESPAsyncTCP.h>
+    #include <AsyncMqttClient.h>
+#elif MQTT_LIBRARY == MQTT_LIBRARY_ARDUINOMQTT
+    #include <MQTTClient.h>
+#elif MQTT_LIBRARY == MQTT_LIBRARY_PUBSUBCLIENT
+    #include <PubSubClient.h>
+#endif
+
 using mqtt_callback_f = std::function<void(unsigned int, const char *, char *)>;
 
-#if MQTT_SUPPORT
-    void mqttRegister(mqtt_callback_f callback);
-    String mqttMagnitude(char * topic);
-#endif
+void mqttRegister(mqtt_callback_f callback);
+
+String mqttTopic(const char * magnitude, bool is_set);
+String mqttTopic(const char * magnitude, unsigned int index, bool is_set);
+
+String mqttMagnitude(char * topic);
+
+void mqttSendRaw(const char * topic, const char * message, bool retain);
+void mqttSendRaw(const char * topic, const char * message);
+
+void mqttSend(const char * topic, const char * message, bool force, bool retain);
+void mqttSend(const char * topic, const char * message, bool force);
+void mqttSend(const char * topic, const char * message);
+
+void mqttSend(const char * topic, unsigned int index, const char * message, bool force);
+void mqttSend(const char * topic, unsigned int index, const char * message);
+
+const String& mqttPayloadOnline();
+const String& mqttPayloadOffline();
+const char* mqttPayloadStatus(bool status);
+
+void mqttSendStatus();
 
 // -----------------------------------------------------------------------------
 // OTA
@@ -188,17 +249,8 @@ using mqtt_callback_f = std::function<void(unsigned int, const char *, char *)>;
 #endif
 
 #if SECURE_CLIENT != SECURE_CLIENT_NONE
-
     #include <WiFiClientSecure.h>
-
-    #if OTA_SECURE_CLIENT_INCLUDE_CA
-    #include "static/ota_secure_client_ca.h"
-    #else
-    #include "static/digicert_evroot_pem.h"
-    #define _ota_client_http_update_ca _ssl_digicert_ev_root_ca
-    #endif
-
-#endif // SECURE_CLIENT_SUPPORT
+#endif // SECURE_CLIENT != SECURE_CLIENT_NONE
 
 // -----------------------------------------------------------------------------
 // RFM69
@@ -218,16 +270,51 @@ typedef struct {
 // -----------------------------------------------------------------------------
 #include <bitset>
 
+enum class RelayStatus : unsigned char {
+    OFF = 0,
+    ON = 1,
+    TOGGLE = 2,
+    UNKNOWN = 0xFF
+};
+
+RelayStatus relayParsePayload(const char * payload);
+
+bool relayStatus(unsigned char id, bool status, bool report, bool group_report);
+bool relayStatus(unsigned char id, bool status);
+bool relayStatus(unsigned char id);
+
+void relayToggle(unsigned char id, bool report, bool group_report);
+void relayToggle(unsigned char id);
+
+unsigned char relayCount();
+
+const String& relayPayloadOn();
+const String& relayPayloadOff();
+const String& relayPayloadToggle();
+const char* relayPayload(RelayStatus status);
+
 // -----------------------------------------------------------------------------
 // Settings
 // -----------------------------------------------------------------------------
 #include <Embedis.h>
+
 template<typename T> bool setSetting(const String& key, T value);
 template<typename T> bool setSetting(const String& key, unsigned int index, T value);
 template<typename T> String getSetting(const String& key, T defaultValue);
 template<typename T> String getSetting(const String& key, unsigned int index, T defaultValue);
 void settingsGetJson(JsonObject& data);
 bool settingsRestoreJson(JsonObject& data);
+
+struct settings_cfg_t {
+    String& setting;
+    const char* key;
+    const char* default_value;
+};
+
+using settings_filter_t = std::function<String(String& value)>;
+using settings_cfg_list_t = std::initializer_list<settings_cfg_t>;
+
+void settingsProcessConfig(const settings_cfg_list_t& config, settings_filter_t filter = nullptr);
 
 // -----------------------------------------------------------------------------
 // Terminal
@@ -284,9 +371,9 @@ struct ws_data_t;
 struct ws_debug_t;
 struct ws_callbacks_t;
 
-using ws_on_send_callback_f = std::function<void(JsonObject&)>;
-using ws_on_action_callback_f = std::function<void(uint32_t, const char *, JsonObject&)>;
-using ws_on_keycheck_callback_f = std::function<bool(const char *, JsonVariant&)>;
+using ws_on_send_callback_f = std::function<void(JsonObject& root)>;
+using ws_on_action_callback_f = std::function<void(uint32_t client_id, const char * action, JsonObject& data)>;
+using ws_on_keycheck_callback_f = std::function<bool(const char * key, JsonVariant& value)>;
 
 using ws_on_send_callback_list_t = std::vector<ws_on_send_callback_f>;
 using ws_on_action_callback_list_t = std::vector<ws_on_action_callback_f>;
@@ -311,36 +398,46 @@ using ws_on_keycheck_callback_list_t = std::vector<ws_on_keycheck_callback_f>;
     ws_callbacks_t& wsRegister();
 
     void wsSetup();
-    void wsSend(uint32_t, const char*);
-    void wsSend(uint32_t, JsonObject&);
-    void wsSend(JsonObject&);
-    void wsSend(ws_on_send_callback_f);
+    void wsSend(uint32_t client_id, const char* data);
+    void wsSend(uint32_t client_id, JsonObject& root);
+    void wsSend(JsonObject& root);
+    void wsSend(ws_on_send_callback_f callback);
 
-    void wsSend_P(PGM_P);
-    void wsSend_P(uint32_t, PGM_P);
+    void wsSend_P(PGM_P data);
+    void wsSend_P(uint32_t client_id, PGM_P data);
 
-    void wsPost(const ws_on_send_callback_f&);
-    void wsPost(const ws_on_send_callback_list_t&);
-    void wsPost(uint32_t, const ws_on_send_callback_list_t&);
+    void INLINE wsPost(const ws_on_send_callback_f& callback);
+    void INLINE wsPost(uint32_t client_id, const ws_on_send_callback_f& callback);
+    void INLINE wsPost(const ws_on_send_callback_list_t& callbacks);
+    void INLINE wsPost(uint32_t client_id, const ws_on_send_callback_list_t& callbacks);
 
-    void wsPostAll(uint32_t, const ws_on_send_callback_list_t&);
-    void wsPostAll(const ws_on_send_callback_list_t&);
+    void INLINE wsPostAll(uint32_t client_id, const ws_on_send_callback_list_t& callbacks);
+    void INLINE wsPostAll(const ws_on_send_callback_list_t& callbacks);
 
-    void wsPostSequence(uint32_t, const ws_on_send_callback_list_t&);
-    void wsPostSequence(const ws_on_send_callback_list_t&);
+    void INLINE wsPostSequence(uint32_t client_id, const ws_on_send_callback_list_t& callbacks);
+    void INLINE wsPostSequence(uint32_t client_id, ws_on_send_callback_list_t&& callbacks);
+    void INLINE wsPostSequence(const ws_on_send_callback_list_t& callbacks);
 
-    bool wsConnected();
-    bool wsConnected(uint32_t);
-    bool wsDebugSend(const char*, const char*);
+    bool INLINE wsConnected();
+    bool INLINE wsConnected(uint32_t client_id);
+    bool wsDebugSend(const char* prefix, const char* message);
 #endif
 
 // -----------------------------------------------------------------------------
 // WIFI
 // -----------------------------------------------------------------------------
 #include <JustWifi.h>
+struct wifi_scan_info_t;
+using wifi_scan_f = std::function<void(wifi_scan_info_t& info)>;
 using wifi_callback_f = std::function<void(justwifi_messages_t code, char * parameter)>;
 void wifiRegister(wifi_callback_f callback);
 bool wifiConnected();
+
+#if LWIP_VERSION_MAJOR == 1
+#include <netif/etharp.h>
+#else // LWIP_VERSION_MAJOR >= 2
+#include <lwip/etharp.h>
+#endif
 
 // -----------------------------------------------------------------------------
 // THERMOSTAT
@@ -354,6 +451,17 @@ using thermostat_callback_f = std::function<void(bool)>;
 // RTC MEMORY
 // -----------------------------------------------------------------------------
 #include "rtcmem.h"
+
+// -----------------------------------------------------------------------------
+// Warn about broken Arduino functions
+// -----------------------------------------------------------------------------
+
+// Division by zero bug
+// https://github.com/esp8266/Arduino/pull/2397
+// https://github.com/esp8266/Arduino/pull/2408
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+long  __attribute__((deprecated("Please avoid using map() with Core 2.3.0"))) map(long x, long in_min, long in_max, long out_min, long out_max);
+#endif
 
 // -----------------------------------------------------------------------------
 // std::make_unique backport for C++11

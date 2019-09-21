@@ -11,6 +11,7 @@ var numChanged = 0;
 var numReboot = 0;
 var numReconnect = 0;
 var numReload = 0;
+var conf_saved = false;
 
 var useWhite = false;
 var useCCT = false;
@@ -376,7 +377,7 @@ function checkTempRangeMin() {
         $("#tempRangeMinInput").val(max - 1);
     }
 }
-  
+
 function checkTempRangeMax() {
     var min = parseInt($("#tempRangeMinInput").val(), 10);
     var max = parseInt($("#tempRangeMaxInput").val(), 10);
@@ -452,6 +453,7 @@ function setOriginalsFromValues(force) {
 function resetOriginals() {
     setOriginalsFromValues(true);
     numReboot = numReconnect = numReload = 0;
+    conf_saved = false;
 }
 
 function doReload(milliseconds) {
@@ -511,47 +513,35 @@ function doUpgrade() {
         var data = new FormData();
         data.append("upgrade", file, file.name);
 
-        $.ajax({
+        var xhr = new XMLHttpRequest();
 
-            // Your server script to process the upload
-            url: urls.upgrade.href,
-            type: "POST",
+        var network_error = function() {
+            alert("There was a network error trying to upload the new image, please try again.");
+        };
+        xhr.addEventListener("error", network_error, false);
+        xhr.addEventListener("abort", network_error, false);
 
-            // Form data
-            data: data,
-
-            // Tell jQuery not to process data or worry about content-type
-            // You *must* include these options!
-            cache: false,
-            contentType: false,
-            processData: false,
-
-            success: function(data, text) {
-                $("#upgrade-progress").hide();
-                if ("OK" === data) {
-                    alert("Firmware image uploaded, board rebooting. This page will be refreshed in 5 seconds.");
-                    doReload(5000);
-                } else {
-                    alert("There was an error trying to upload the new image, please try again (" + data + ").");
-                }
-            },
-
-            // Custom XMLHttpRequest
-            xhr: function() {
-                $("#upgrade-progress").show();
-                var myXhr = $.ajaxSettings.xhr();
-                if (myXhr.upload) {
-                    // For handling the progress of the upload
-                    myXhr.upload.addEventListener("progress", function(e) {
-                        if (e.lengthComputable) {
-                            $("progress").attr({ value: e.loaded, max: e.total });
-                        }
-                    } , false);
-                }
-                return myXhr;
+        xhr.addEventListener("load", function(e) {
+            $("#upgrade-progress").hide();
+            if ("OK" === xhr.responseText) {
+                alert("Firmware image uploaded, board rebooting. This page will be refreshed in 5 seconds.");
+                doReload(5000);
+            } else {
+                alert("There was an error trying to upload the new image, please try again ("
+                    + "response: " + xhr.responseText + ", "
+                    + "status: " + xhr.statusText + ")");
             }
+        }, false);
 
-        });
+        xhr.upload.addEventListener("progress", function(e) {
+            $("#upgrade-progress").show();
+            if (e.lengthComputable) {
+                $("progress").attr({ value: e.loaded, max: e.total });
+            }
+        }, false);
+
+        xhr.open("POST", urls.upgrade.href);
+        xhr.send(data);
 
     });
 
@@ -613,6 +603,31 @@ function doReconnect(ask) {
 
 }
 
+function doCheckOriginals() {
+    var response;
+
+    if (numReboot > 0) {
+        response = window.confirm("You have to reboot the board for the changes to take effect, do you want to do it now?");
+        if (response) { doReboot(false); }
+    } else if (numReconnect > 0) {
+        response = window.confirm("You have to reconnect to the WiFi for the changes to take effect, do you want to do it now?");
+        if (response) { doReconnect(false); }
+    } else if (numReload > 0) {
+        response = window.confirm("You have to reload the page to see the latest changes, do you want to do it now?");
+        if (response) { doReload(0); }
+    }
+
+    resetOriginals();
+}
+
+function waitForSave(){
+    if (conf_saved == false) {
+        setTimeout(waitForSave, 1000);
+    } else {
+        doCheckOriginals();
+    }
+}
+
 function doUpdate() {
 
     var forms = $(".form-settings");
@@ -629,24 +644,8 @@ function doUpdate() {
 
         // Change handling
         numChanged = 0;
-        setTimeout(function() {
 
-            var response;
-
-            if (numReboot > 0) {
-                response = window.confirm("You have to reboot the board for the changes to take effect, do you want to do it now?");
-                if (response) { doReboot(false); }
-            } else if (numReconnect > 0) {
-                response = window.confirm("You have to reconnect to the WiFi for the changes to take effect, do you want to do it now?");
-                if (response) { doReconnect(false); }
-            } else if (numReload > 0) {
-                response = window.confirm("You have to reload the page to see the latest changes, do you want to do it now?");
-                if (response) { doReload(0); }
-            }
-
-            resetOriginals();
-
-        }, 1000);
+        waitForSave();
 
     }
 
@@ -1099,7 +1098,47 @@ function initMagnitudes(data) {
 
 <!-- removeIf(!light)-->
 
-function initColor(rgb) {
+// wheelColorPicker accepts:
+//   hsv(0...360,0...1,0...1)
+//   hsv(0...100%,0...100%,0...100%)
+// While we use:
+//   hsv(0...360,0...100%,0...100%)
+
+function _hsv_round(value) {
+    return Math.round(value * 100) / 100;
+}
+
+function getPickerRGB(picker) {
+    return $(picker).wheelColorPicker("getValue", "css");
+}
+
+function setPickerRGB(picker, color) {
+    $(picker).wheelColorPicker("setValue", value, true);
+}
+
+// TODO: use pct values instead of doing conversion?
+function getPickerHSV(picker) {
+    var color = $(picker).wheelColorPicker("getColor");
+    return String(Math.ceil(_hsv_round(color.h) * 360))
+        + "," + String(Math.ceil(_hsv_round(color.s) * 100))
+        + "," + String(Math.ceil(_hsv_round(color.v) * 100));
+}
+
+function setPickerHSV(picker, value) {
+    if (value === getPickerHSV(picker)) return;
+    var chunks = value.split(",");
+    $(picker).wheelColorPicker("setColor", {
+        h: _hsv_round(chunks[0] / 360),
+        s: _hsv_round(chunks[1] / 100),
+        v: _hsv_round(chunks[2] / 100)
+    });
+}
+
+function initColor(cfg) {
+    var rgb = false;
+    if (typeof cfg === "object") {
+        rgb = cfg.rgb;
+    }
 
     // check if already initialized
     var done = $("#colors > div").length;
@@ -1112,15 +1151,12 @@ function initColor(rgb) {
 
     // init color wheel
     $("input[name='color']").wheelColorPicker({
-        sliders: (rgb ? "wrgbp" : "whsvp")
+        sliders: (rgb ? "wrgbp" : "whsp")
     }).on("sliderup", function() {
         if (rgb) {
-            var value = $(this).wheelColorPicker("getValue", "css");
-            sendAction("color", {rgb: value});
+            sendAction("color", {rgb: getPickerRGB(this)});
         } else {
-            var color = $(this).wheelColorPicker("getColor");
-            var value = parseInt(color.h * 360, 10) + "," + parseInt(color.s * 100, 10) + "," + parseInt(color.v * 100, 10);
-            sendAction("color", {hsv: value});
+            sendAction("color", {hsv: getPickerHSV(this)});
         }
     });
 
@@ -1434,20 +1470,14 @@ function processData(data) {
         <!-- removeIf(!light)-->
 
         if ("rgb" === key) {
-            initColor(true);
-            $("input[name='color']").wheelColorPicker("setValue", value, true);
+            initColor({rgb: true});
+            setPickerRGB($("input[name='color']"), value);
             return;
         }
 
         if ("hsv" === key) {
-            initColor(false);
-            // wheelColorPicker expects HSV to be between 0 and 1 all of them
-            var chunks = value.split(",");
-            var obj = {};
-            obj.h = chunks[0] / 360;
-            obj.s = chunks[1] / 100;
-            obj.v = chunks[2] / 100;
-            $("input[name='color']").wheelColorPicker("setColor", obj);
+            initColor({hsv: true});
+            setPickerHSV($("input[name='color']"), value);
             return;
         }
 
@@ -1641,6 +1671,9 @@ function processData(data) {
 
         // Messages
         if ("message" === key) {
+            if (value == 8 && (numReboot > 0 || numReload > 0 || numReconnect > 0)){
+                conf_saved = true;
+            }
             window.alert(messages[value]);
             return;
         }
@@ -1732,9 +1765,16 @@ function processData(data) {
         // Look for SPANs
         var span = $("span[name='" + key + "']");
         if (span.length > 0) {
-            pre = span.attr("pre") || "";
-            post = span.attr("post") || "";
-            span.html(pre + value + post);
+            if (Array.isArray(value)) {
+                value.forEach(function(elem) {
+                    span.append(elem);
+                    span.append('</br>');
+                });
+            } else {
+                pre = span.attr("pre") || "";
+                post = span.attr("post") || "";
+                span.html(pre + value + post);
+            }
         }
 
         // Look for SELECTs
@@ -1816,12 +1856,17 @@ function connectToURL(url) {
 
     initUrls(url);
 
-    $.ajax({
+    fetch(urls.auth.href, {
         'method': 'GET',
-        'crossDomain': true,
-        'url': urls.auth.href,
-        'xhrFields': { 'withCredentials': true }
-    }).done(function(data) {
+        'cors': true,
+        'credentials': 'same-origin'
+    }).then(function(response) {
+        // Nothing to do, reload page and retry
+        if (response.status != 200) {
+            doReload(5000);
+            return;
+        }
+        // update websock object
         if (websock) { websock.close(); }
         websock = new WebSocket(urls.ws.href);
         websock.onmessage = function(evt) {
@@ -1830,8 +1875,9 @@ function connectToURL(url) {
                 processData(data);
             }
         };
-    }).fail(function() {
-        // Nothing to do, reload page and retry
+    }).catch(function(error) {
+        console.log(error);
+        doReload(5000);
     });
 
 }
@@ -1847,9 +1893,11 @@ function connectToCurrentURL() {
     connectToURL(new URL(window.location));
 }
 
-function getParameterByName(name) {
-    var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
-    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+function enableWSLogging() {
+    var processDataOrig = window.processData;
+    window.processData = function(data) { console.log(data); processDataOrig(data); }
+    var sendActionOrig = window.sendAction;
+    window.sendAction = function(action, data) { console.log(action,data); sendActionOrig(action, data);}
 }
 
 $(function() {
@@ -1930,7 +1978,10 @@ $(function() {
     if (window.location.protocol === "file:") { return; }
 
     // Check host param in query string
-    if (host = getParameterByName('host')) {
+    var search = new URLSearchParams(window.location.search),
+        host = search.get("host");
+
+    if (host !== null) {
         connect(host);
     } else {
         connectToCurrentURL();

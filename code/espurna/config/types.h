@@ -152,6 +152,12 @@
 #define MQTT_DISCONNECT_EVENT       1
 #define MQTT_MESSAGE_EVENT          2
 
+// MQTT_LIBRARY
+#define MQTT_LIBRARY_ASYNCMQTTCLIENT        0
+#define MQTT_LIBRARY_ARDUINOMQTT            1
+#define MQTT_LIBRARY_PUBSUBCLIENT           2
+
+
 //------------------------------------------------------------------------------
 // LED
 //------------------------------------------------------------------------------
@@ -309,6 +315,7 @@
 #define SENSOR_BMP180_ID            34
 #define SENSOR_MAX6675_ID           35
 #define SENSOR_LDR_ID               36
+#define SENSOR_ADE7953_ID           37
 
 //--------------------------------------------------------------------------------
 // Magnitudes
@@ -353,6 +360,7 @@
 //------------------------------------------------------------------------------
 // Telnet server
 //------------------------------------------------------------------------------
+
 #define TELNET_SERVER_ASYNC        0
 #define TELNET_SERVER_WIFISERVER   1
 
