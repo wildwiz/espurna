@@ -758,7 +758,7 @@
 
     // Info
     #define MANUFACTURER        "ITEAD"
-    #define DEVICE              "SONOFF_RFBRIDGE"
+    #define DEVICE              "SONOFF_RFBRIDGE-mb"
     #define RELAY_PROVIDER      RELAY_PROVIDER_RFBRIDGE
 
     // Number of virtual switches
@@ -2719,24 +2719,20 @@
 
     // Info
     #define MANUFACTURER            "LUANI"
-    #define DEVICE                  "HVIO"
+    #define DEVICE                  "HVIO-mb"
 
     // Buttons
     #define BUTTON1_PIN             12
     #define BUTTON1_RELAY           1
-    #define BUTTON1_MODE            BUTTON_SWITCH | BUTTON_DEFAULT_HIGH //Hardware Pullup
-
-    #define BUTTON1_PRESS           BUTTON_MODE_NONE
-    #define BUTTON1_CLICK           BUTTON_MODE_TOGGLE
-    #define BUTTON1_DBLCLICK        BUTTON_MODE_NONE
-    #define BUTTON1_LNGCLICK        BUTTON_MODE_NONE
-    #define BUTTON1_LNGLNGCLICK     BUTTON_MODE_NONE
+    #define BUTTON1_MODE            BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH //Hardware Pullup
+    #define BUTTON1_PRESS           BUTTON_MODE_TOGGLE
+    #define BUTTON1_CLICK           BUTTON_MODE_NONE
 
     #define BUTTON2_PIN             13
     #define BUTTON2_RELAY           2
-    #define BUTTON2_MODE            BUTTON_SWITCH | BUTTON_DEFAULT_HIGH //Hardware Pullup
-
-    #define BUTTON2_CLICK          BUTTON_MODE_TOGGLE
+    #define BUTTON2_MODE            BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH //Hardware Pullup
+    #define BUTTON2_PRESS           BUTTON_MODE_TOGGLE
+    #define BUTTON2_CLICK           BUTTON_MODE_NONE
 
     // Relays
     #define RELAY1_PIN              4
@@ -3270,12 +3266,14 @@
 
     // Info
     #define MANUFACTURER        "ALLTERCO"
-    #define DEVICE              "SHELLY1"
+    #define DEVICE              "SHELLY1-mb"
 
     // Buttons
     #define BUTTON1_PIN         5
-    #define BUTTON1_MODE        BUTTON_SWITCH
+    #define BUTTON1_MODE        BUTTON_PUSHBUTTON
     #define BUTTON1_RELAY       1
+    #define BUTTON1_PRESS       BUTTON_MODE_TOGGLE
+    #define BUTTON1_CLICK       BUTTON_MODE_NONE
 
     // Relays
     #define RELAY1_PIN          4
@@ -3285,15 +3283,19 @@
 
     // Info
     #define MANUFACTURER        "ALLTERCO"
-    #define DEVICE              "SHELLY2"
+    #define DEVICE              "SHELLY2-mb"
 
     // Buttons
     #define BUTTON1_PIN         12
     #define BUTTON2_PIN         14
-    #define BUTTON1_MODE        BUTTON_SWITCH
-    #define BUTTON2_MODE        BUTTON_SWITCH
+    #define BUTTON1_MODE        BUTTON_PUSHBUTTON
+    #define BUTTON2_MODE        BUTTON_PUSHBUTTON
     #define BUTTON1_RELAY       1
     #define BUTTON2_RELAY       2
+    #define BUTTON1_PRESS       BUTTON_MODE_TOGGLE
+    #define BUTTON2_PRESS       BUTTON_MODE_TOGGLE
+    #define BUTTON1_CLICK       BUTTON_MODE_NONE
+    #define BUTTON2_CLICK       BUTTON_MODE_NONE
 
     // Relays
     #define RELAY1_PIN          4
