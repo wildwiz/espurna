@@ -1,10 +1,3 @@
 #!/bin/bash
-
-types=$(
-    for type in allterco-shelly1 allterco-shelly2 itead-s20 itead-sonoff-rfbridge-direct luani-hvio zhilde-eu44-w; do
-	echo $type $type-ota
-    done
-) 
-
-exec ./build.sh $types
+exec ./build.sh {allterco-shelly{1,2},itead-s20,itead-sonoff-rfbridge-direct{,-dht22},luani-hvio,zhilde-eu44-w}{,-ota}
 
